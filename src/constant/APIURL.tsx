@@ -1,5 +1,5 @@
-export const Root_URL = 'https://aws.erav.lk/everast/mobile_api/';
-export const Root_URL2 = 'https://aws.erav.lk/everast/getprocess/';
+export const Root_URL = 'https://aws.erav.lk/inomax/mobile_api/';
+export const Root_URL2 = 'https://aws.erav.lk/inomax/getprocess/';
 export const Login_URL = `${Root_URL}login.php`;
 export const Customer_URL = `${Root_URL}getallcustomerforporder.php`;
 export const Product_URL = `${Root_URL2}getallproductswithstock.php`;

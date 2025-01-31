@@ -50,10 +50,10 @@ const drawerStyles = StyleSheet.create({
     borderWidth: 2,
     borderColor: MainStyles.COLORS.CHILI_PAPER,
     resizeMode: 'contain',
-    height: 130,
-    width: 130,
+    height: 140,
+    width: 140,
     alignItems: 'center',
-    borderRadius: 130 / 2,
+    borderRadius: 140 / 2,
   },
 
   versionView: {

@@ -124,18 +124,18 @@ const loginStyles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 30,
+    marginTop: 70,
     marginBottom: 20,
   },
 
   button: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 9,
+    paddingVertical: 12,
     paddingHorizontal: 32,
     borderRadius: 10,
     elevation: 3,
-    width: '50%',
+    width: 160,
     backgroundColor: MainStyles.COLORS.CHILI_PAPER,
   },
   text: {

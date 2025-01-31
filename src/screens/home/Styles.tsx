@@ -51,8 +51,8 @@ const homeStyles = StyleSheet.create({
   },
 
   imageStyle: {
-    width: 250,
-    height: 220,
+    width: 200,
+    height: 200,
     resizeMode: 'contain',
   },
 

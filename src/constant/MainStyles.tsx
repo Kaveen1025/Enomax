@@ -21,6 +21,6 @@ export default {
     DARK_GREEN: '#285430',
     MEROON: '#850E35',
     NAVY_BLUE: '#000080',
-    CHILI_PAPER: '#FF4500',
+    CHILI_PAPER: '#FF0000',
   },
 };
