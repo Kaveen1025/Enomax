@@ -12,6 +12,8 @@ interface InvoiceCardProps {
   orderStatus: string;
   netTotal: string;
   remark?: string;
+  borderColor?: string; // New Prop for Dynamic Border Color
+  borderWidth?: number; // New prop for dynamic border width
   disabled: boolean;
   onPress?: () => void;
 }
@@ -24,6 +26,8 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   orderStatus,
   remark,
   disabled,
+  borderColor = MainStyles.COLORS.CHILI_PAPER, // Default Color
+  borderWidth = 1, // Default border width
   onPress,
 }) => {
   const labelStyle = {
@@ -34,7 +38,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   };
   return (
     <TouchableOpacity disabled={disabled}>
-      <View style={[invoiceCardStyles.invoiceCard]}>
+      <View style={[invoiceCardStyles.invoiceCard, {borderColor, borderWidth}]}>
         <View style={{flex: 0.8}}>
           <View style={invoiceCardStyles.labelContainer}>
             <Text style={labelStyle}>Place Order ID</Text>

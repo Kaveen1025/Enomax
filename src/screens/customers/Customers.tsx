@@ -59,13 +59,12 @@ const Customers = ({route}: any) => {
   }, [searchQuery, customerDataAccoRef]);
 
   const loadAllCustomersAccoRef = async () => {
+    dispatch(setSpinnerMessage('Loading Customers According to Rep...'));
+    dispatch(startLoading());
     let userId = await AsyncStorage.getItem('empid');
     if (designation === '1') {
       userId = value; // 'value' is the selected value from the dropdown
     }
-
-    dispatch(setSpinnerMessage('Loading Customers According to Rep...'));
-    dispatch(startLoading());
     var data = new FormData();
     data.append('employeeId', userId);
     // data.append('areaid', value);

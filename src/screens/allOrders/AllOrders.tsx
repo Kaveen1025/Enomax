@@ -26,6 +26,7 @@ import InvoiceCustomerInfo from '../../components/invoiceCustomerInfo/InvoiceCus
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getAllOrders} from '../../service/api';
 import {setAllOrders} from '../../redux/action/loadDataActions';
+import moment from 'moment';
 
 const AllOrdersScreen = ({route, navigation}: any) => {
   const {allOrders} = useSelector((state: ReduxState) => state?.loadData);
@@ -54,11 +55,15 @@ const AllOrdersScreen = ({route, navigation}: any) => {
       const customername = orders?.data?.customername || '';
       const area = orders?.data?.area || '';
       const orderid = orders?.data?.orderid || '';
+      const orderDate = orders?.data?.date
+        ? moment(orders?.data?.date, 'YYYY-MM-DD').format('YYYY-MM-DD')
+        : '';
 
       return (
         customername.toLowerCase().includes(searchQuery.toLowerCase()) ||
         area.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        orderid.includes(searchQuery)
+        orderid.includes(searchQuery) ||
+        orderDate.includes(searchQuery)
       );
     });
 
@@ -135,17 +140,29 @@ const AllOrdersScreen = ({route, navigation}: any) => {
             EVEREST HARDWARE CO.(PVT) LTD.
           </Text>
         </View>
-        <InvoiceCustomerInfo item="Date" value={selectItem?.data?.date} />
+        <InvoiceCustomerInfo
+          item="Date"
+          value={selectItem?.data?.date ? selectItem?.data?.date : 'N/A'}
+        />
         <InvoiceCustomerInfo
           item="Place Order ID"
-          value={`PO${selectItem?.data?.orderid}`}
+          value={`PO${
+            selectItem?.data?.orderid ? selectItem?.data?.orderid : ''
+          }`}
         />
         <InvoiceCustomerInfo
           item="Customer Name"
-          value={selectItem?.data?.customername}
+          value={
+            selectItem?.data?.customername
+              ? selectItem?.data?.customername
+              : 'N/A'
+          }
         />
 
-        <InvoiceCustomerInfo item="Address" value={selectItem?.data?.address} />
+        <InvoiceCustomerInfo
+          item="Address"
+          value={selectItem?.data?.address ? selectItem?.data?.address : 'N/A'}
+        />
         <InvoiceCustomerInfo
           item="Remark"
           value={selectItem?.data?.remark ? selectItem.data.remark : 'N/A'}
@@ -240,23 +257,65 @@ const AllOrdersScreen = ({route, navigation}: any) => {
     );
   };
 
-  const renderItem = ({item}: any) => (
-    <InvoiceCard
-      poID={'PO' + item?.data?.orderid}
-      orderDate={item?.data?.date}
-      customerName={item?.data?.customername}
-      orderStatus={getStatusText(item?.data?.status)}
-      netTotal={parseFloat(item?.data?.nettotal)
-        .toFixed(2)
-        .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-      disabled={true}
-      onPress={() => {
-        setSelectItem(item);
-        setVisibleInvoiceItem(true);
-      }}
-      remark={item?.data?.remark ? item.data.remark : 'N/A'}
-    />
-  );
+  // const renderItem = ({item}: any) => (
+
+  //   <InvoiceCard
+  //     poID={'PO' + (item?.data?.orderid ? item?.data?.orderid : '')}
+  //     orderDate={item?.data?.date ? item?.data?.date : 'N/A'}
+  //     customerName={item?.data?.customername ? item?.data?.customername : 'N/A'}
+  //     orderStatus={getStatusText(item?.data?.status)}
+  //     netTotal={parseFloat(item?.data?.nettotal)
+  //       .toFixed(2)
+  //       .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+  //     disabled={true}
+  //     onPress={() => {
+  //       setSelectItem(item);
+  //       setVisibleInvoiceItem(true);
+  //     }}
+  //     remark={item?.data?.remark ? item.data.remark : 'N/A'}
+  //   />
+  // );
+
+  const renderItem = ({item}: any) => {
+    const orderDate = item?.data?.date
+      ? moment(item.data.date, 'YYYY-MM-DD')
+      : null;
+    const today = moment();
+    const daysDiff = orderDate ? today.diff(orderDate, 'days') : 0;
+
+    let borderColor;
+    let borderWidth;
+
+    if (daysDiff > 90) {
+      borderColor = '#FF0000'; // More than 90 days -> Red border
+      borderWidth = 4;
+    } else if (daysDiff > 60) {
+      borderColor = '#FFC300'; // More than 30 days -> Yellow border
+      borderWidth = 4;
+    }
+
+    return (
+      <InvoiceCard
+        poID={'PO' + (item?.data?.orderid ? item?.data?.orderid : '')}
+        orderDate={item?.data?.date ? item?.data?.date : 'N/A'}
+        customerName={
+          item?.data?.customername ? item?.data?.customername : 'N/A'
+        }
+        orderStatus={getStatusText(item?.data?.status)}
+        netTotal={parseFloat(item?.data?.nettotal)
+          .toFixed(2)
+          .replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+        disabled={true}
+        onPress={() => {
+          setSelectItem(item);
+          setVisibleInvoiceItem(true);
+        }}
+        remark={item?.data?.remark ? item.data.remark : 'N/A'}
+        borderColor={borderColor} // Pass dynamic border color
+        borderWidth={borderWidth} // Pass dynamic border width
+      />
+    );
+  };
 
   return (
     <SafeAreaView style={allProductsStyles.container}>

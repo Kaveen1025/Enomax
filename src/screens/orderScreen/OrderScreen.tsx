@@ -91,13 +91,15 @@ const OrderScreen = ({route, navigation}: any) => {
   };
 
   const renderItem = ({item}: any) => (
+
     <OrderCard
       itemName={item.name}
       price={item.price}
-      availableQty={item.qty ?? '0'}
+      availableQty={item.availableQty ?? '0'}
       orderQty={getOrderItem(item)}
       onPress={() => {
-        if (item.qty > 0) {
+        console.log(item)
+        if (item.availableQty > 0) {
           setSelectedOrder(item);
           setModalVisible(true);
           setQuantity(item.orderQty);
@@ -136,7 +138,7 @@ const OrderScreen = ({route, navigation}: any) => {
       Alert.alert('Invalid Input', 'Please enter a valid quantity.');
       return;
     }
-    if (parseInt(quantity) > selectedOrder.qty) {
+    if (parseInt(quantity) > selectedOrder.availableQty) {
       Alert.alert(
         'Quantity Exceeded',
         'The order quantity cannot exceed the available quantity.',
@@ -290,7 +292,7 @@ const OrderScreen = ({route, navigation}: any) => {
                       :
                     </Text>
                     <Text style={orderDetailStyles.itemValue}>
-                      {selectedOrder?.qty}
+                      {selectedOrder?.availableQty}
                     </Text>
                   </View>
                 </View>

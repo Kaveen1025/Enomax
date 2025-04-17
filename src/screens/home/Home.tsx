@@ -115,7 +115,10 @@ const Home = () => {
     {
       name: 'View Sales Details',
       imagePath: require('../../assets/images/excellent.png'),
-      onPress: () => navigation.navigate('RepSalesDetails' as never),
+      onPress: () =>
+        navigation.navigate('RepSalesDetails', {
+          designation: designation,
+        } as never),
     },
 
     {
@@ -155,6 +158,8 @@ const Home = () => {
     await getAllOrdersData();
     await loadAllRepsAccoManager();
     await loadAllRepsDetailsAccoManager();
+    let userId = await AsyncStorage.getItem('empid');
+    console.log('EMPID', userId);
   };
 
   const loadAllRepsAccoManager = async () => {

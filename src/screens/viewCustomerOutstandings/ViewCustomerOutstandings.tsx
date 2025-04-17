@@ -1,6 +1,6 @@
-import {useNavigation} from '@react-navigation/native';
-import React, {useEffect, useState} from 'react';
-import {View, Text, TouchableOpacity, Alert} from 'react-native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import React, {useCallback, useEffect, useState} from 'react';
+import {View, Text, TouchableOpacity} from 'react-native';
 import customerStyles from './Styles';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import HeaderBar from '../../components/headerBar/HeaderBar';
@@ -22,20 +22,16 @@ import {setCustomersWithOutstanding} from '../../redux/action/loadDataActions';
 const CustomersOutsandings = ({route}: any) => {
   const navigation = useNavigation();
   const dispatch = useDispatch();
-  const {
-    customerData,
-    customerDataAccoRef,
-    customerDataWithOutstanding,
-    repsAccoManager,
-  } = useSelector((state: ReduxState) => state?.loadData);
-  const [searchQuery, setSearchQuery] = React.useState('');
-  const [filteredCustomers, setFilteredCustomers] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState(
-    repsAccoManager.length > 0 ? repsAccoManager[0].id : null,
+  const {customerDataWithOutstanding, repsAccoManager} = useSelector(
+    (state: ReduxState) => state?.loadData,
   );
 
-  // Access the passed designation param
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState(null);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+
   const {designation} = route.params || {}; // Prevent error
 
   const formattedRepData = repsAccoManager.map(rep => ({
@@ -43,10 +39,65 @@ const CustomersOutsandings = ({route}: any) => {
     value: rep.id,
   }));
 
+  // Load last selected representative
   useEffect(() => {
-    loadAllCustomersWithOutstandings();
-    console.log(repsAccoManager);
+    const loadLastRep = async () => {
+      dispatch(startLoading());
+      const savedRep = await AsyncStorage.getItem('selectedRep');
+      if (savedRep) {
+        setValue(JSON.parse(savedRep));
+      } else if (repsAccoManager.length > 0) {
+        setValue(repsAccoManager[0].id);
+      }
+      setIsInitialLoading(false);
+      dispatch(endLoading());
+    };
+    loadLastRep();
+  }, [repsAccoManager]);
+
+  // Load customers when rep is selected
+  useEffect(() => {
+    const updateStorage = async () => {
+      if (value) {
+        console.log('Updating AsyncStorage with Rep ID:', value);
+        loadAllCustomersWithOutstandings();
+        AsyncStorage.setItem('selectedRep', JSON.stringify(value));
+      }
+    };
+    updateStorage();
   }, [value]);
+
+  // Reload customers when navigating back
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(setSpinnerMessage('Loading Customers...')); // Reset message
+      if (!isInitialLoading) {
+        loadAllCustomersWithOutstandings();
+      }
+    }, [isInitialLoading]),
+  );
+
+  const loadAllCustomersWithOutstandings = async () => {
+    dispatch(startLoading());
+    dispatch(setSpinnerMessage('Loading Customers...'));
+
+    let userId = await AsyncStorage.getItem('empid');
+    if (designation === '1') {
+      userId = value;
+    }
+
+    var data = new FormData();
+    data.append('empId', userId);
+
+    try {
+      const res = await getAllCustomersWithOutstandingFunction(data);
+      dispatch(setCustomersWithOutstanding(res.data));
+    } catch (error) {
+      console.log(error);
+    } finally {
+      dispatch(endLoading());
+    }
+  };
 
   useEffect(() => {
     const filtered = customerDataWithOutstanding.filter(customer =>
@@ -55,36 +106,9 @@ const CustomersOutsandings = ({route}: any) => {
     setFilteredCustomers(filtered);
   }, [searchQuery, customerDataWithOutstanding]);
 
-  const loadAllCustomersWithOutstandings = async () => {
-    let userId = await AsyncStorage.getItem('empid');
-    if (designation === '1') {
-      userId = value; // 'value' is the selected value from the dropdown
-    }
-
-    dispatch(setSpinnerMessage('Loading Customers...'));
-    dispatch(startLoading());
-    var data = new FormData();
-    data.append('empId', userId);
-    // data.append('areaid', value);
-    getAllCustomersWithOutstandingFunction(data)
-      .then(res => {
-        dispatch(setCustomersWithOutstanding(res.data));
-        // console.log('res', res.data);
-        dispatch(endLoading());
-      })
-      .catch(error => {
-        console.log(error);
-        dispatch(endLoading());
-      });
-  };
-
-  // Format numbers with thousand separators and two decimal places
-  const formatNumber = (num: any) => {
-    return Number(num).toLocaleString('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
+  // if (isInitialLoading) {
+  //   return <Spinner />;
+  // }
 
   return (
     <SafeAreaView style={customerStyles.container}>
@@ -94,6 +118,7 @@ const CustomersOutsandings = ({route}: any) => {
         page="Customer Outstandings"
       />
       <Spinner />
+
       {designation === '1' && (
         <View>
           <Text style={customerStyles.area}>Select Sales Representative</Text>
@@ -102,7 +127,7 @@ const CustomersOutsandings = ({route}: any) => {
             value={value}
             items={formattedRepData}
             placeholder="Select Sales Representative"
-            searchPlaceholder="Search area...."
+            searchPlaceholder="Search rep..."
             setOpen={setOpen}
             setValue={setValue}
             containerStyle={{
@@ -115,24 +140,22 @@ const CustomersOutsandings = ({route}: any) => {
         </View>
       )}
 
-      <View>
-        <Searchbar
-          placeholder="Search"
-          onChangeText={setSearchQuery}
-          value={searchQuery}
-          style={{
-            marginLeft: 10,
-            marginRight: 10,
-            marginTop: 8,
-            marginBottom: 15,
-            borderRadius: 10,
-            height: 50,
-            width: '90%',
-            alignSelf: 'center',
-          }}
-          inputStyle={{marginTop: -2}}
-        />
-      </View>
+      <Searchbar
+        placeholder="Search"
+        onChangeText={setSearchQuery}
+        value={searchQuery}
+        style={{
+          marginLeft: 10,
+          marginRight: 10,
+          marginTop: 8,
+          marginBottom: 15,
+          borderRadius: 10,
+          height: 50,
+          width: '90%',
+          alignSelf: 'center',
+        }}
+        inputStyle={{marginTop: -2}}
+      />
 
       {filteredCustomers.length > 0 ? (
         <FlatGrid
@@ -140,22 +163,19 @@ const CustomersOutsandings = ({route}: any) => {
           data={filteredCustomers}
           style={customerStyles.gridView}
           spacing={10}
-          renderItem={({item, index}) => (
+          renderItem={({item}) => (
             <TouchableOpacity
               style={[customerStyles.itemContainer, customerStyles.shadowProp]}
-              onPress={async () => {
-                // await AsyncStorage.setItem('areaId', item?.areaId);
-                // console.log('Area ID', item?.areaId);
-
-                // Check if designation is '1' to pass rep ID
-                const navigationParams = {
+              onPress={() => {
+                const navigationParams: any = {
                   customerID: item?.customerId,
-                  // areaIDAccoRef: item?.areaId,
+                  designation: designation,
+                  outTot: item?.fulltot,
+                  // repID: selectedRepID, // Ensure repID is always passed
                 };
 
-                // If designation is '1', include the rep ID
                 if (designation === '1') {
-                  navigationParams.repID = value; // 'value' is the selected rep ID
+                  navigationParams.repID = value;
                 }
 
                 navigation.navigate(
@@ -168,7 +188,6 @@ const CustomersOutsandings = ({route}: any) => {
               <Text style={customerStyles.outstanding}>
                 {'Total Outstanding (Rs.)'}
               </Text>
-
               <Text style={customerStyles.dot}>
                 {'----------------------------'}
               </Text>
@@ -183,6 +202,13 @@ const CustomersOutsandings = ({route}: any) => {
       )}
     </SafeAreaView>
   );
+};
+
+const formatNumber = (num: any) => {
+  return Number(num).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 };
 
 export default CustomersOutsandings;

@@ -20,6 +20,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: MainStyles.COLORS.RED,
   },
+
+  loader: {
+    marginTop: '60%',
+  },
+
+  outTot: {
+    textAlign: 'center',
+    fontSize: 18,
+    marginTop: 10,
+    fontWeight: 'bold',
+    color: MainStyles.COLORS.BROWN,
+    marginBottom: 10,
+  },
 });
 
 export default styles;
