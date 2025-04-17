@@ -40,16 +40,29 @@ const CustomDraverContent = () => {
 
   const logout = async () => {
     dispatch(startLoading());
-    await AsyncStorage.removeItem('selectedArea');
-    await AsyncStorage.removeItem('selectedRef');
-    await AsyncStorage.removeItem('user');
-    await AsyncStorage.removeItem('userType');
-    await AsyncStorage.removeItem('empid');
-    await AsyncStorage.removeItem('name');
-    await AsyncStorage.removeItem('areaId');
-    dispatch(endLoading());
-    navigation.dispatch(DrawerActions.closeDrawer());
-    navigation.navigate('Login' as never);
+    try {
+      await AsyncStorage.multiRemove([
+        'empid',
+        'selectedArea',
+        'selectedRef',
+        'user',
+        'userType',
+        'name',
+        'areaId',
+        'selectedRep',
+      ]);
+
+      setUserName(null); // Ensure state is updated
+      dispatch(endLoading());
+
+      navigation.dispatch(DrawerActions.closeDrawer());
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'Login'}],
+      });
+    } catch (error) {
+      console.error('Error clearing async storage:', error);
+    }
   };
 
   return (
@@ -66,7 +79,7 @@ const CustomDraverContent = () => {
                 <Title style={drawerStyles.title}>
                   {' '}
                   <Title style={drawerStyles.title}>
-                    {userName ? userName : 'EHPL ORDER NOW'}
+                    {userName ? userName : 'ENOMAX'}
                   </Title>
                 </Title>
               </View>
